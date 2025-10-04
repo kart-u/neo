@@ -4,9 +4,6 @@ import Neo from '../../../../../src/Neo.mjs';
 import * as core from '../../../../../src/core/_export.mjs'; // CRITICAL: Required for Neo.mjs environment setup in Node.js
 import StringFromVnode from '../../../../../src/vdom/util/StringFromVnode.mjs';
 
-// tests are designed for this rendering mode
-// Neo.config.useDomApiRenderer = false;
-
 let oldVdom, vdom;
 
 test.describe('vdom/layout/Cube', () => {
@@ -18,6 +15,10 @@ test.describe('vdom/layout/Cube', () => {
      */
     test.beforeEach(() => {
         Neo.config.useDomApiRenderer = false;
+    });
+
+    test.afterEach(() => {
+        Neo.config.useDomApiRenderer = true;
     });
 
     test('Wrap Container Items', () => {
