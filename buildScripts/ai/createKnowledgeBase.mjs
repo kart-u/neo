@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import fs     from 'fs-extra';
 import path   from 'path';
 import dotenv from 'dotenv';
+import { execSync } from 'child_process';
 
 const
     cwd       = process.cwd(),
@@ -235,6 +236,30 @@ class CreateKnowledgeBase {
                             chunk.hash = createContentHash(chunk);
                             writeStream.write(JSON.stringify(chunk) + '\n');
                             ticketChunks++;
+
+                            const ticketIdMatch = content.match(/GH ticket id: #(\d+)/);
+                            if (ticketIdMatch) {
+                                const ticketId = ticketIdMatch[1];
+                                try {
+                                    const comments = execSync(`gh issue view ${ticketId} --comments`).toString();
+                                    const commentChunks = comments.split('---').filter(c => c.trim().length > 0);
+
+                                    commentChunks.forEach(commentContent => {
+                                        const commentChunk = {
+                                            type    : 'comment',
+                                            kind    : 'comment',
+                                            name    : `Comment on: ${chunkName}`,
+                                            content : commentContent.trim(),
+                                            parentId: chunk.hash,
+                                            source  : filePath
+                                        };
+                                        commentChunk.hash = createContentHash(commentChunk);
+                                        writeStream.write(JSON.stringify(commentChunk) + '\n');
+                                    });
+                                } catch (error) {
+                                    console.warn(`Could not fetch comments for ticket #${ticketId}: ${error.message}`);
+                                }
+                            }
                         }
                     }
                 }
